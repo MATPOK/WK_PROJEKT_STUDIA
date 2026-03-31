@@ -2,9 +2,10 @@
 venv/
 .env/
 
-# Ignoruj bazę danych 
+# Ignoruj bazę danych, ale ZOSTAW zdjęcia testowe i .gitkeep
 data/*
 !data/.gitkeep
+!data/test_images/
 
 # Ignoruj pliki tymczasowe Pythona
 __pycache__/
