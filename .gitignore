@@ -1,0 +1,16 @@
+# Ignoruj wirtualne środowisko
+venv/
+.env/
+
+# Ignoruj bazę danych 
+data/*
+!data/.gitkeep
+
+# Ignoruj pliki tymczasowe Pythona
+__pycache__/
+*.pyc
+
+# Ignoruj archiwa
+*.zip
+*.rar
+DB.zip
