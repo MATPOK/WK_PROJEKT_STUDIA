@@ -1,17 +1,25 @@
 # Ignoruj wirtualne środowisko
-venv/
-.env/
+Code/venv/
+Code/.env/
 
-# Ignoruj bazę danych, ale ZOSTAW zdjęcia testowe i .gitkeep
-data/*
-!data/.gitkeep
-!data/test_images/
+# Ignoruj bazę danych, ale zostaw zdjęcia testowe i .gitkeep
+Code/data/Train
+Code/data/selected_signs
 
 # Ignoruj pliki tymczasowe Pythona
-__pycache__/
-*.pyc
+Code/__pycache__/
+Code/*.pyc
 
 # Ignoruj archiwa
-*.zip
-*.rar
-DB.zip
+Code/*.zip
+Code/*.rar
+Code/DB.zip
+
+# Ignoruj pliki LATEX
+Documentation/main.aux
+Documentation/main.fdb_latexmk
+Documentation/main.fls
+Documentation/main.log
+Documentation/main.out
+Documentation/main.synctex.gz
+Documentation/main.toc

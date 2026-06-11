@@ -1,0 +1,146 @@
+\documentclass[12pt,oneside]{article}
+
+% Ładujemy Twój szablon
+\usepackage{szablon_pokrywka}
+
+% --- KONFIGURACJA DANYCH ---
+\author{Mateusz Pokrywka, Maciej Pereślucha}
+\studentID{177143, 177139}
+\type{Dokumentacja projektu} % Np. Projekt Inżynierski, Sprawozdanie
+\course{Wizja komputerowa}
+\title{Detekcja i klasyfikacja znaków drogowych}
+
+% Opcjonalnie: zmiana ścieżki do loga, jeśli nie jest w figures/
+% \setlogopath{logoweii.jpg}
+
+\begin{document}
+
+% 1. Strona tytułowa
+\maketitle
+
+% 2. Spis treści
+\tableofcontents
+\clearpage
+
+\section{Opis problemu}
+Projekt skupia się na detekcji i klasyfikacji znaków drogowych z wykorzystaniem poznanych metod wizji komputerowej oraz maszyny wektorów nośnych (SVM). 
+Celem jest stworzenie systemu, który potrafi wpierw wykryć znaki dorogowe na zdjęciu, a następnie przypisać je do odpowiedniej kategorii.
+Ze względu na realizację projektu w mniejszej grupie (2 osoby), w porozumieniu z prowadzącą zdecydowaliśmy na ograniczenie się do 5 klas znaków: STOP, ustąp pierwszeństwa, zakaz wjazdu, droga z pierwszeństwem, ograniczenie prędkości do 30 km/h.
+\section{Część teoretyczna}
+W tym rozdziale przedstawiamy kluczowe zagadnienia teoretyczne dotyczące maszyny wektorów nośnych (SVM) oraz metod wizji komputerowej wykorzystywanych w projekcie.
+Omawiamy zasadę działania algorytmów, filtrów, technik ekstrakcji cech oraz procesu trenowania SVM. 
+Wiedza ta stanowi podstawę do dalszej pracy, w której przeprowadzamy analizę eksperymentalną.
+
+\subsection{Algorytmy i filtry przetwarzania obrazu}
+\begin{itemize}
+    \item \textbf{Filtr Gaussa}: metoda wygładzania obrazu i redukcji szumów wysokoczęstotliwościowych poprzez uśrednianie wartości pikseli z użyciem funkcji rozkładu normalnego. Zapobiega wykrywaniu fałszywych krawędzi.
+    \item \textbf{Konwersja przestrzeni barw (BGR -> HSV i BGR -> Grayscale)}: przekształcenie do skali szarości upraszcza obraz do jednego kanału intensywności, przyspieszając obliczenia. Model HSV oddziela informację o barwie od oświetlenia, co znacznie ułatwia segmentację kolorów w zmiennych warunkach świetlnych.
+    \item \textbf{Progowanie kolorów}: technika binaryzacji, w której piksele o wartościach mieszczących się w zadanym zakresie (np. dany kolor znaków w HSV) otrzymują wartość maksymalną (biały), a pozostałe minimalną (czarny), odcinając interesujące obiekty od tła.
+    \item \textbf{Nieliniowe filtry morfologiczne}: operacje bazujące na kształcie obiektów na obrazie binarnym:
+        \begin{itemize}
+            \item \textbf{otwarcie (Erozja + Dylatacja)}: służy do usuwania drobnych szumów (pojedynczych pikseli) z tła, bez zmiany rozmiaru głównych obiektów.
+            \item \textbf{zamknięcie (Dylatacja + Erozja)}: wypełnia niewielkie dziury i luki wewnątrz obiektów oraz wygładza ich kontury.
+        \end{itemize}
+    \item \textbf{Detekcja konturów}: algorytmiczne wyszukiwanie połączonych krzywych ograniczających ciągłe obiekty na obrazie binarnym, co pozwala wyodrębnić ich granice i kształty.
+    \item \textbf{Filtry geometryczne konturów}: metody odrzucania fałszywych obiektów na podstawie analizy ich kształtu:
+        \begin{itemize}
+            \item \textbf{aspect ratio}: stosunek szerokości do wysokości prostokąta opisanego na konturze. Pozwala odfiltrować obiekty o nienaturalnych proporcjach.
+            \item \textbf{solidity}: stosunek pola powierzchni obiektu do pola powierzchni jego wypukłej otoczki. Pomaga ocenić zwartość kształtu i usunąć obiekty nieregularne.
+        \end{itemize}
+    \item \textbf{Ekstrakcja ROI (Region of Interest)}: wycinanie obszaru zainteresowania z pełnego obrazu w celu przekazania tylko jego (np. samego znaku drogowego) do klasyfikatora, drastycznie redukując obciążenie obliczeniowe.
+\end{itemize}
+
+\subsection{Ekstrakcja cech i Machine Learning}
+\begin{itemize}
+    \item \textbf{HOG (Histogram of Oriented Gradients)}: deskryptor wyodrębniający cechy obrazu, który analizuje kształt i wygląd lokalnych struktur poprzez zliczanie wystąpień kierunków gradientów jasności (krawędzi) w gęstej siatce komórek. Transformuje obraz w skrócony wektor numeryczny odporny na niewielkie zmiany geometryczne.
+    \item \textbf{SVM (Support Vector Machine)}:
+    Jedna z najbardziej znanych metod nadzorowanego uczenia maszynowego, wykorzystywana przede wszystkim w zadaniach klasyfikacji i regresji. Głównym celem algorytmu SVM jest znalezienie hiperpłaszczyzny (granicy decyzyjnej), która w możliwie najlepszy sposób oddziela dane należące do różnych klas.\\
+    W przypadku problemu klasyfikacji dwuklasowej, algorytm dąży do wyznaczenia takiej prostej (w przestrzeni dwuwymiarowej), płaszczyzny (w trójwymiarowej) lub hiperpłaszczyzny (w przestrzeniach o wyższych wymiarach), która:
+    \begin{itemize}
+        \item maksymalizuje margines (patrz Rys. \ref{Fig:svm}.), czyli odległość między hiperpłaszczyzną a najbliższymi punktami danych obu klas (tzw. wektorami nośnymi),
+        \item minimalizuje błędy klasyfikacyjne, zachowując jak najwyższą separację między klasami.
+    \end{itemize}
+    Technicznie rzecz ujmując, SVM identyfikuje hiperpłaszczyznę w taki sposób, aby maksymalnie oddzielić punkty danych należące do różnych klas, zachowując jak największy margines separacji między nimi.
+    \begin{figure}[H]
+    \centering
+    \includegraphics[width=14cm]{figures/obrazy/svm.png}
+    \caption{Margines hiperpłaszczyzny SVM.}
+    \label{Fig:svm}
+    \end{figure}
+    \item \textbf{Train/test split}: procedura walidacyjna polegająca na podziale całego dostępnego zbioru danych na dwie rozłączne części: treningową (służącą do dopasowania wag modelu) oraz testową (służącą do obiektywnej weryfikacji jego skuteczności na nowych, wcześniej niewidzianych danych).
+    \item \textbf{Metryki ewaluacyjne}: wskaźniki matematyczne służące do oceny jakości przewidywań modelu. Do najważniejszych należą: dokładność (Accuracy - ogólny odsetek poprawnych klasyfikacji), precyzja (Precision), czułość (Recall) oraz średnia harmoniczna obu tych wartości (F1-Score).
+\end{itemize}
+
+\subsection{YOLOv8-nano}
+YOLO (You Only Look Once) w wersji 8-nano to nowoczesna, najlżejsza architektonicznie odmiana głębokich sieci neuronowych z rodziny YOLOv8. Jest to algorytm typu jednoprzebiegowego, który podczas zaledwie jednego przejścia przez sieć przewiduje zarówno lokalizację obiektów (ramki otaczające), jak i ich klasy. Wersja nano została zoptymalizowana pod kątem minimalnego zapotrzebowania na pamięć i maksymalnej szybkości wnioskowania w czasie rzeczywistym. Dzięki temu idealnie sprawdza się w systemach wbudowanych oraz urządzeniach brzegowych, utrzymując przy tym wysoce satysfakcjonującą skuteczność detekcji.
+
+\section{Analiza danych}
+\subsection{Dane do wytreniowanie modelu SVM}
+Do realizacji projektu wykorzystaliśmy zbiór danych GTSRB (German Traffic Sign Recognition Benchmark), który zawiera ponad 50 000 zdjęć znaków drogowych w 43 klasach.\\
+Wszystkie zdjęcia podzielone są na dwie grupy: testową i treningową, na potrzeby wytrenowania i testowania modelu korzystaliśmy jedynie z części treningowej ze względu na już posortowane tam zdjęcia i dostępne ich etykiety.
+Obrazy w bazie danych mają różne wymiary oraz są zapisane w formacie PNG (baza danych została przetworzona przez autora na serwisie kaggle), przeważającą częścią każdego zdjęcia zajmuje przedstawiany znak drogowy (patrz Rys. \ref{Fig:przyk20kmh}.).\\
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=14cm]{figures/obrazy/00000_00001_00029.png}
+    \caption{Przykładowe zdjęcie z bazy danych GTSRB (klasa 0 - ograniczenie prędkości do 20 km/h)}
+    \label{Fig:przyk20kmh}
+\end{figure}
+
+Dla celów projektu ograniczyliśmy się do 5 klas, wybierając wszystkie dostępne zdjęcia z tych kategorii, odpowiednio:
+\begin{itemize}
+    \item 780 - STOP,
+    \item 2160 - ustąp pierwszeństwa,
+    \item 1110 - zakaz wjazdu,
+    \item 2100 - droga z pierwszeństwem,
+    \item 2220 - ograniczenie prędkości do 30 km/h.
+\end{itemize}
+
+%Łącznie wykorzystaliśmy 8370 zdjęć, które w sposób losowy podzieliliśmy na zbiór treningowy (80 proc.) i testowy (20 proc.) funkcją train_test_split() z biblioteki scikit-learn.\\
+Łącznie wykorzystaliśmy 8370 zdjęć, które w sposób losowy podzieliliśmy na zbiór treningowy (80 proc.) i testowy (20 proc.).\\
+Z tak przygotowanymi danymi wejściowymi przystąpiliśmy do trenowania modelu SVM.
+
+\subsection{Dane do testowania całego procesu detekcji i klasyfikacji}
+Do testowania całego procesu detekcji i klasyfikacji wykorzystaliśmy zbiór zdjęć z Polskich oraz Niemieckich dróg, które zostały pozyskane z internetu. W przeciwieństwie do bazy danych GTSRB, zdjęcia te nie są posegregowane według klas, a znaki drogowe zajmują na nich mniejszą część kadru, co pozwala na sprawdzenie skuteczności całego procesu detekcji i klasyfikacji w warunkach bardziej zbliżonych do rzeczywistych.  
+Poniższy Rys. \ref{Fig:znaki_testowe} przedstawia 10 zdjęć testowych, które posłużyły do końcowej oceny skuteczności naszego systemu.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=14cm]{figures/obrazy/kolarz.png}
+    \caption{Zestaw 10 zdjęć testowych do oceny skuteczności systemu detekcji i klasyfikacji znaków drogowych.}
+    \label{Fig:znaki_testowe}
+\end{figure}
+
+\section{Pipeline procesu}
+Cały proces detekcji i klasyfikacji znaków drogowych został zaprojektowany jako sekwencja następujących po sobie operacji, które można podzielić na następujące etapy:
+\begin{enumerate}
+    \item \textbf{Wstępne przetwarzanie obrazu}: wczytanie obrazu wejściowego, ujednolicenie jego rozmiaru oraz zastosowanie filtru Gaussa w celu redukcji szumów wysokoczęstotliwościowych. Następnie wykonywana jest konwersja z przestrzeni BGR do przestrzeni HSV, która jest bardziej odporna na zmiany oświetlenia.
+    
+    \item \textbf{Segmentacja i binaryzacja}: progowanie kolorów (wyodrębnienie barw charakterystycznych dla znaków). Otrzymana maska binarna jest poddawana nieliniowym filtrom morfologicznym (otwarciu w celu usunięcia drobnego szumu z tła oraz zamknięciu w celu wypełnienia luk wewnątrz obiektów).
+    
+    \item \textbf{Detekcja obiektów i filtracja geometryczna}: wyszukiwanie konturów na oczyszczonym obrazie binarnym. Każdy znaleziony kontur jest analizowany pod kątem cech geometrycznych. Wykorzystywane są filtry weryfikujące proporcje (aspect ratio) oraz zwartość (solidity), co pozwala na skuteczne odrzucenie fałszywych obiektów (np. drzew, budynków, pojazdów).
+    
+    \item \textbf{Ekstrakcja ROI i wyznaczanie cech}: wycięcie z oryginalnego obrazu zweryfikowanych obszarów zainteresowania (Region of Interest - ROI) zawierających potencjalne znaki. Każdy ROI jest konwertowany do skali szarości, a następnie przepuszczany przez algorytm HOG (Histogram of Oriented Gradients), który generuje unikalny wektor cech numerycznych opisujących krawędzie i kształty.
+    
+    \item \textbf{Klasyfikacja (SVM)}: ostatnim etapem jest przekazanie wygenerowanego wektora cech HOG do wytrenowanego wcześniej modelu Support Vector Machine (SVM) z jądrem liniowym. Algorytm przypisuje wykryty obiekt do jednej z 5 zdefiniowanych klas docelowych.
+\end{enumerate}
+
+\section{Skrypt programu}
+
+\begin{lstlisting}[language=Python, caption={Kod procesu wyboru 5 klas}, label={Kod:kopiowanie zdj}]
+#jakis skrypt
+\end{lstlisting}
+
+\section{Eksperymenty}
+Eksperymenty...
+\section{Posumowanie i wnioski}
+Posumowanie i wnioski...
+
+% Bibliografia ręczna (zgodnie ze starym wzorem)
+\begin{thebibliography}{9}
+    \bibitem{str} http://weii.portal.prz.edu.pl/. Dostęp 01.02.2024.
+    \bibitem{Ksiazka} Kowalski J.: \textit{Podstawy elektroniki}, WNT, Warszawa 2020.
+    \bibitem{Datasheet} Dokumentsacja techniczna czujnika S200, Lumel, 2001.
+\end{thebibliography}
+
+\end{document}

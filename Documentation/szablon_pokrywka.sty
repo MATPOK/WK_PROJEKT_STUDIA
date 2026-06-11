@@ -1,0 +1,172 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{szablon_pokrywka}[2024/02/01 v1.2 Clean WEII Template - Fixed]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 1. PAKIETY PODSTAWOWE I KODOWANIE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage[polish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+% Wymiary strony wg wytycznych (lewy margines na oprawę)
+\usepackage[a4paper, left=3.5cm, right=2cm, top=2.5cm, bottom=2.5cm]{geometry}
+
+% Czcionki: Times New Roman dla tekstu, Courier dla kodu
+\usepackage{courier}
+\usepackage{mathptmx} 
+\usepackage{bm} % Pogrubienia w matematyce (\bm{})
+\usepackage{lmodern}
+
+% Grafika, kolory, PDF
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{float}      % Pozycjonowanie [H]
+\usepackage{pdfpages}   % Dołączanie PDF
+\usepackage{here}
+
+% Matematyka
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% Listy i Tabele
+\usepackage{enumitem}
+\usepackage{booktabs}   % Profesjonalne linie w tabelach
+\usepackage{array}
+\usepackage{multirow}
+
+% Wykresy i Rysunki
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+% Kod źródłowy
+\usepackage[final]{listingsutf8}
+
+% Podpisy pod obiektami (Rys. zamiast Rysunek, kropka po numerze)
+\usepackage[font=small,labelfont=bf,labelsep=period]{caption}
+\addto\captionspolish{\renewcommand{\figurename}{Rys.}}
+\addto\captionspolish{\renewcommand{\tablename}{Tab.}}
+
+% Linki (musi być na końcu preambuły)
+\usepackage{hyperref}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 2. KONFIGURACJA WYGLĄDU (FORMATOWANIE WEII)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Interlinia 1.5
+\linespread{1.5}
+
+% Wcięcie akapitowe 1.25 cm
+\setlength\parindent{1.25cm}
+
+% Konfiguracja list (zgodnie ze starym wzorem: myślniki, wcięcia)
+\setlist[enumerate,1]{label=\arabic*), leftmargin=1.25cm, itemsep=0pt, topsep=0pt}
+\setlist[itemize,1]{label={--}, labelsep=0.4cm, leftmargin=1.25cm, itemsep=0pt, topsep=0pt}
+\setlist[itemize,2]{label={--}, labelsep=0.4cm, leftmargin=0.6cm, itemsep=0pt, topsep=0pt}
+
+% Kolory do kodów źródłowych
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+% Ustawienia listingu (kodu)
+\lstset{
+    backgroundcolor=\color{white},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize\linespread{1}\selectfont, % Mniejsza interlinia w kodzie
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=t,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2,
+    frame=single,
+    rulecolor=\color{black},
+    inputencoding=utf8,
+    extendedchars=true,
+    literate={ą}{{\k{a}}}1 {ć}{{\'c}}1 {ę}{{\k{e}}}1 {ł}{{\l{}}}1 {ń}{{\'n}}1 {ó}{{\'o}}1 {ś}{{\'s}}1 {ż}{{\.z}}1 {ź}{{\'z}}1
+}
+
+% Numeracja obiektów z uwzględnieniem rozdziału (np. Rys. 2.1)
+\AtBeginDocument{
+    \counterwithin{lstlisting}{section}
+    \counterwithin{figure}{section}
+    \counterwithin{table}{section}
+    \counterwithin{equation}{section}
+}
+
+% Pusta strona (komenda pomocnicza)
+\newcommand\blankpage{
+    \null
+    \thispagestyle{empty}
+    \newpage
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 3. ZMIENNE I STRONA TYTUŁOWA
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand\@myauthor{}
+\renewcommand\author[1]{\renewcommand\@myauthor{#1}}
+
+\newcommand\@myid{}
+\newcommand\studentID[1]{\renewcommand\@myid{#1}}
+
+\newcommand\@mytitle{}
+\renewcommand\title[1]{\renewcommand\@mytitle{#1}}
+
+\newcommand\@mycourse{}
+\newcommand\course[1]{\renewcommand\@mycourse{#1}}
+
+\newcommand\@mytype{Sprawozdanie} 
+\newcommand\type[1]{\renewcommand\@mytype{#1}}
+
+% Ścieżka do loga (domyślnie szuka w folderze figures lub głównym)
+\newcommand\@logopath{figures/logoweii.jpg}
+\newcommand\setlogopath[1]{\renewcommand\@logopath{#1}}
+
+\renewcommand{\maketitle}{
+    \begin{titlepage}
+        \begin{center}
+            % LOGO - musi być plik logoweii.jpg
+            \vspace*{1cm}
+            \IfFileExists{\@logopath}{
+                \includegraphics[width=12.5cm]{\@logopath}
+            }{
+                \vspace*{2cm}
+                \textbf{[BRAK PLIKU LOGA: \@logopath]} \\
+                \textit{Wgraj plik logoweii.jpg do folderu figures}
+                \vspace*{2cm}
+            }
+            
+            \vspace{4cm}
+            
+            {\Huge \textbf{\@mytype}} 
+    
+            
+            {\Large \textbf{\@mycourse}}
+            \vspace{1cm}
+            
+            {\Large ``\@mytitle''}
+            \vspace{1cm}
+            
+            {\Large \textbf{\@myauthor}} \\
+            {\large \@myid} 
+            
+            \vfill
+            
+            {\large Rzeszów, \the\day.\the\month.\the\year}
+        \end{center}
+    \end{titlepage}
+}
+
+\endinput
