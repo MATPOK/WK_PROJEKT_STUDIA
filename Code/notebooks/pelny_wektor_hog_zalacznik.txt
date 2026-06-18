@@ -1,6 +1,6 @@
-DOKUMENTACJA PROJEKTU: Wektor cech HOG
-Wymiary obrazu wejœciowego: (64, 64)
-Ca³kowita liczba wygenerowanych cech: 1764
+Wektor cech HOG
+Rozmiar obrazu wejsciowego: (64, 64)
+Liczba cech: 1764
 ======================================================================
 
 [0.0000e+00, 0.0000e+00, 1.8284e-03, 6.9792e-03, 6.9813e-02, 2.6018e-02, 0.0000e+00, 1.3984e-02,
