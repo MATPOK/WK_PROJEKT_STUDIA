@@ -5,10 +5,15 @@ Code/.env/
 # Ignoruj bazę danych, ale zostaw zdjęcia testowe i .gitkeep
 Code/data/Train
 Code/data/selected_signs
+Code/data/db_balanced
 
 # Ignoruj pliki tymczasowe Pythona
 Code/__pycache__/
 Code/*.pyc
+
+# Ignoruj cache cech i wyniki eksperymentow (notebook 04)
+Code/notebooks/cache_features/
+Code/notebooks/wyniki_eksperymentow/
 
 # Ignoruj archiwa
 Code/*.zip

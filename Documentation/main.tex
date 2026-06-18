@@ -163,7 +163,7 @@ fragment skalowany jest do $64 \times 64$ px przed dalszym przetwarzaniem.
 % ---------------------------------------------------------
 \subsection{Ekstrakcja cech -- deskryptor HOG}
 % ---------------------------------------------------------
-HOG \cite{dalal2005} (Histogram of Oriented Gradients) zamienia obraz na wektor liczb
+HOG (Histogram of Oriented Gradients) zamienia obraz na wektor liczb
 opisujący rozkład krawędzi. To dobry deskryptor dla znaków, bo znaki różnią się
 przede wszystkim kształtem, a HOG właśnie kształt koduje.
 
@@ -254,7 +254,7 @@ $\mathbf{x} \in \mathbb{R}^{1764}$.
 % ---------------------------------------------------------
 
 \subsubsection{Idea i sformułowanie optymalizacyjne}
-SVM \cite{cortes1995} (Support Vector Machine) to klasyfikator, który szuka
+SVM (Support Vector Machine) to klasyfikator, który szuka
 hiperpłaszczyzny decyzyjnej $\mathbf{w}^T\mathbf{x} + b = 0$ maksymalnie oddzielającej
 klasy od siebie (patrz Rys.~\ref{Fig:svm}). Im szerszy margines między klasami,
 tym lepsza generalizacja na nowych danych. W wersji soft-margin, która dopuszcza
@@ -318,11 +318,11 @@ Parametry $A_k$ i $B_k$ dopasowywane są automatycznie. Wartości te widoczne s�
 w kodzie jako \texttt{confidence} -- procent pewności klasyfikatora.
 
 \subsubsection{Podział danych i metryki ewaluacyjne}
-Zbiór 8370 próbek dzielony jest losowo w proporcji 80/20
+Zbalansowany zbiór 3900 próbek dzielony jest losowo w proporcji 80/20
 (\texttt{random\_state=42} gwarantuje powtarzalność):
 \begin{equation}
-    |\mathcal{D}_{train}| = 0{,}8 \cdot 8370 = 6696 \qquad
-    |\mathcal{D}_{test}|  = 0{,}2 \cdot 8370 = 1674
+    |\mathcal{D}_{train}| = 0{,}8 \cdot 3900 = 3120 \qquad
+    |\mathcal{D}_{test}|  = 0{,}2 \cdot 3900 = 780
     \label{eq:split}
 \end{equation}
 Do oceny modelu używamy czterech standardowych metryk, wyznaczanych osobno dla
@@ -345,8 +345,7 @@ fałszywie pozytywne i fałszywie negatywne predykcje dla klasy $k$:
 % =========================================================
 
 \subsection{Dane do wytrenowania modelu SVM}
-Do treningu użyto zbioru GTSRB (German Traffic Sign Recognition Benchmark)
-\cite{stallkamp2012} -- jednego z najpopularniejszych zbiorów do rozpoznawania
+Do treningu użyto zbioru GTSRB (German Traffic Sign Recognition Benchmark) -- jednego z najpopularniejszych zbiorów do rozpoznawania
 znaków drogowych, zawierającego ponad 50\,000 zdjęć w 43 klasach. Korzystaliśmy
 wyłącznie z części treningowej, ponieważ zdjęcia są tam posortowane według klas
 i mają dostępne etykiety. Obrazy mają różne wymiary i zapisane są w formacie PNG
@@ -360,7 +359,9 @@ i mają dostępne etykiety. Obrazy mają różne wymiary i zapisane są w formac
     \label{Fig:przyk20kmh}
 \end{figure}
 
-Spośród 43 klas wybraliśmy 5 odpowiadających zakresowi projektu:
+Spośród 43 klas wybraliśmy 5 odpowiadających zakresowi projektu. Liczba zdjęć w
+tych klasach była jednak bardzo nierówna (Tabela~\ref{tab:classes}) -- od 780
+(STOP) do 2220 (ograniczenie 30).
 
 \begin{table}[H]
 \centering
@@ -377,24 +378,31 @@ Spośród 43 klas wybraliśmy 5 odpowiadających zakresowi projektu:
     \textbf{Łącznie}               & \textbf{8370} \\
     \bottomrule
 \end{tabular}
-\caption{Liczebność poszczególnych klas w zbiorze uczącym.}
+\caption{Pierwotna (niezbalansowana) liczebność wybranych klas w bazie GTSRB.}
 \label{tab:classes}
 \end{table}
 
-Zbiór podzielono losowo na treningowy (80\%) i testowy (20\%) funkcją
+Taka nierównowaga sprawia, że model uczy się głównie klas licznych, a słabiej
+rozpoznaje te rzadsze. Dlatego zbiór \textbf{zbalansowaliśmy}: z każdej klasy
+wylosowaliśmy tyle samo zdjęć, ile liczy klasa najmniejsza (STOP -- 780). Po
+zbalansowaniu każda z~5 klas ma 780 zdjęć, co daje $5 \times 780 = 3900$ zdjęć
+uczących. Eksperyment w rozdziale~\ref{sec:exp} potwierdza, że balansowanie
+poprawia rozpoznawanie rzadszych klas.
+
+Zbalansowany zbiór podzielono losowo na treningowy (80\%) i testowy (20\%) funkcją
 \texttt{train\_test\_split()} z biblioteki scikit-learn \cite{scikit}
 (\texttt{random\_state=42} -- por. równanie~\ref{eq:split}).
 
 \subsection{Dane do testowania procesu detekcji i klasyfikacji}
-Do oceny całego potoku (nie tylko modelu SVM) użyliśmy zdjęć z polskich i~niemieckich
-dróg pobranych z internetu. W odróżnieniu od GTSRB, zdjęcia te nie są posortowane
-według klas, a znaki drogowe zajmują mniejszą część kadru -- bardziej zbliżone są do
-warunków rzeczywistych (Rys.~\ref{Fig:znaki_testowe}).
+Do oceny całego potoku (nie tylko modelu SVM) użyliśmy 25 zdjęć (po 5 na każdą
+klasę) z prawdziwych dróg, pobranych z internetu. W odróżnieniu od GTSRB znaki
+zajmują na nich mniejszą część kadru, a tło jest zróżnicowane -- są więc bliższe
+warunkom rzeczywistym (Rys.~\ref{Fig:znaki_testowe}).
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=14cm]{figures/obrazy/kolarz.png}
-    \caption{Zestaw 10 zdjęć testowych do oceny skuteczności systemu.}
+    \caption{Przykładowe zdjęcia testowe do oceny skuteczności systemu.}
     \label{Fig:znaki_testowe}
 \end{figure}
 
@@ -447,7 +455,7 @@ from sklearn.metrics import (accuracy_score, classification_report,
 import matplotlib.pyplot as plt
 import joblib
 
-DATA_DIR        = '../data/selected_signs'
+DATA_DIR        = '../data/db_balanced'   # zbalansowany zbior (780 zdjec/klase)
 MODEL_SAVE_PATH = '../models/svm_model.pkl'
 IMG_SIZE        = (64, 64)
 
@@ -584,42 +592,192 @@ plt.show()
 
 % =========================================================
 \section{Eksperymenty}
+\label{sec:exp}
 % =========================================================
-Eksperymenty...
+Eksperymenty miały dwa cele: dobrać parametry potoku i sprawdzić skuteczność
+systemu. Model oceniamy na dwa sposoby: (1) na zbiorze testowym GTSRB (20\% danych)
+oraz (2) na zdjęciach z prawdziwych dróg, które pokazują działanie całego potoku
+detekcji. Wszystkie eksperymenty wykonano przy stałym ziarnie losowym
+(\texttt{random\_state=42}).
+
+% ---------------------------------------------------------
+\subsection{Balansowanie zbioru}
+% ---------------------------------------------------------
+Najpierw sprawdziliśmy wpływ zbalansowania klas. Model trenowany na zbiorze
+niezbalansowanym osiąga 89,84\% trafności, a na zbalansowanym 90,77\%. Co
+ważniejsze, na macierzy pomyłek wyraźnie poprawia się rozpoznawanie klas wcześniej
+mniej licznych. Dlatego w finalnym systemie używamy zbioru zbalansowanego.
+
+% ---------------------------------------------------------
+\subsection{Dobór jądra SVM i parametru C}
+% ---------------------------------------------------------
+Porównaliśmy jądro liniowe i RBF dla kilku wartości parametru $C$
+(Tabela~\ref{tab:expA}). Najwyższą trafność na GTSRB daje jądro RBF z $C=10$
+(95,5\%). Mimo to w finalnym systemie zostawiliśmy jądro \textbf{liniowe}: jak
+pokazał eksperyment z ROI (podrozdział~\ref{sec:roi}), wyższy wynik na GTSRB nie
+przekłada się na lepszą detekcję na realnych zdjęciach, a model liniowy daje
+stabilniejsze, lepiej skalibrowane prawdopodobieństwa.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{llcc}
+    \toprule
+    Jądro & $C$ & Skalowanie cech & Accuracy [\%] \\
+    \midrule
+    RBF     & 10  & nie & 95,52 \\
+    RBF     & 1   & tak & 94,56 \\
+    liniowe & 0,1 & nie & 92,83 \\
+    liniowe & 1   & nie & 89,84 \\
+    liniowe & 1   & tak & 89,25 \\
+    \bottomrule
+\end{tabular}
+\caption{Wybrane wyniki porównania konfiguracji SVM (zbiór testowy GTSRB).}
+\label{tab:expA}
+\end{table}
+
+Sprawdziliśmy też skalowanie cech (\texttt{StandardScaler}) oraz wyważenie klas
+(\texttt{class\_weight}) -- żadne z nich nie poprawiło wyniku, ponieważ deskryptor
+HOG jest już znormalizowany metodą L2-Hys.
+
+% ---------------------------------------------------------
+\subsection{Parametry deskryptora HOG}
+% ---------------------------------------------------------
+Porównaliśmy różne rozmiary komórki, liczby orientacji i wielkości bloku
+(Tabela~\ref{tab:expB}). Co ciekawe, większy wektor cech nie oznacza wyższej
+trafności -- najkrótszy wektor (komórka $16\times16$) wypada nawet najlepiej.
+Zostawiliśmy konfigurację $8\times8$ px, 9 orientacji i blok $2\times2$ (wektor
+1764 cech) jako sprawdzony kompromis między dokładnością a długością wektora.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{cccr}
+    \toprule
+    Komórka [px] & Orientacje & Blok & Accuracy [\%] \\
+    \midrule
+    8  & 6  & 2 & 90,80 \\
+    8  & 9  & 2 & 89,84 \\
+    8  & 12 & 2 & 89,84 \\
+    16 & 9  & 2 & 92,77 \\
+    8  & 9  & 3 & 91,22 \\
+    \bottomrule
+\end{tabular}
+\caption{Wpływ parametrów HOG na trafność (zbiór testowy GTSRB).}
+\label{tab:expB}
+\end{table}
+
+% ---------------------------------------------------------
+\subsection{Progi maski koloru i próg pewności}
+% ---------------------------------------------------------
+W treningu maska koloru używa niższych progów nasycenia i jasności ($S,V \ge 30,40$),
+ponieważ na wykadrowanych zdjęciach GTSRB tło prawie nie istnieje. W detekcji na
+zdjęciach drogowych podnosimy je do $70,50$ -- niższe progi przepuszczają zbyt
+wiele fałszywych obszarów o zbliżonym kolorze. Podobnie próg pewności klasyfikatora
+(0,70--0,85) jest kompromisem: zbyt niski wpuszcza błędne etykiety na tle, a zbyt
+wysoki pomija trudniejsze znaki.
+
+% ---------------------------------------------------------
+\subsection{Wycięcie ROI: GTSRB kontra prawdziwa detekcja}
+\label{sec:roi}
+% ---------------------------------------------------------
+To najważniejszy eksperyment. Sprawdziliśmy, czy klasyfikator powinien uczyć się
+na wyciętym ROI, czy na całym obrazie. Na zbiorze GTSRB wynik jest zaskakujący:
+model uczony \emph{bez} ROI osiąga prawie 100\%, a \emph{z} ROI około 90\%. GTSRB
+to gotowe wycięcia znaku, więc dodatkowe wycinanie tylko psuje obraz.
+
+Kluczowa jest jednak ocena na \textbf{prawdziwych zdjęciach} (Tabela~\ref{tab:roi}).
+Tu sytuacja się odwraca: model uczony z ROI poprawnie rozpoznaje 72\% znaków, a bez
+ROI tylko 64\%. Powód: w detekcji klasyfikator zawsze dostaje wycinek znaku z całego
+zdjęcia, więc musi być uczony na takich samych wycinkach. Wyższy wynik na GTSRB nie
+oznacza zatem lepszego systemu -- liczy się zgodność sposobu przetwarzania obrazu w
+treningu i w detekcji.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{lcc}
+    \toprule
+    Wariant uczenia & Trafność na GTSRB & Skuteczność detekcji \\
+    \midrule
+    \textbf{z ROI} (finalny) & $\sim$90\%  & \textbf{72\%} \\
+    bez ROI                  & $\sim$100\% & 64\% \\
+    \bottomrule
+\end{tabular}
+\caption{Lepszy wynik na GTSRB (bez ROI) nie przekłada się na lepszą detekcję na
+         realnych zdjęciach.}
+\label{tab:roi}
+\end{table}
+
+% ---------------------------------------------------------
+\subsection{Skuteczność całego systemu}
+% ---------------------------------------------------------
+Finalny system (uczenie z ROI, zbiór zbalansowany, jądro liniowe) przetestowaliśmy
+na 25 zdjęciach z prawdziwych dróg (po 5 na każdą klasę). System wykrył znak na 20
+z 25 zdjęć (80\%), a 18 z 25 sklasyfikował w pełni poprawnie (72\%). Najlepiej
+rozpoznawane są znaki zakazu wjazdu i STOP; najwięcej pominięć dotyczy ograniczenia
+30 -- wynika to z różnic między niemieckimi znakami z bazy GTSRB a znakami na
+zdjęciach testowych.
 
 % =========================================================
 \section{Podsumowanie i wnioski}
 % =========================================================
-Podsumowanie i wnioski...
+\textbf{Co zadziałało.} Zbudowany system łączy klasyczny potok przetwarzania obrazu
+(maska koloru HSV, morfologia, kontury, wycięcie ROI) z deskryptorem HOG i
+klasyfikatorem SVM. Na zbiorze testowym GTSRB osiąga około 90\% trafności, a na
+prawdziwych zdjęciach drogowych poprawnie rozpoznaje 72\% znaków. Najlepiej sprawdza
+się dla znaków wyraźnych i widzianych od przodu.
+
+\textbf{Wnioski z eksperymentów.} Najważniejsza obserwacja: \emph{wyższy wynik na
+zbiorze testowym nie zawsze oznacza lepszy system}. Zarówno uczenie bez ROI, jak i
+jądro RBF dawały wyższą trafność na GTSRB, ale gorzej (lub mniej stabilnie) działały
+na realnej detekcji. Dlatego trening i detekcja muszą stosować ten sam sposób
+przetwarzania obrazu. Zbalansowanie zbioru poprawiło rozpoznawanie rzadszych klas, a
+skalowanie cech i wyważanie klas okazały się zbędne, bo HOG jest już znormalizowany.
+
+\textbf{Ograniczenia.} System ma trzy główne słabości:
+\begin{itemize}
+    \item \textbf{Różnica dziedzin} -- model uczył się na niemieckich znakach GTSRB,
+          więc na zdjęciach z innych krajów (inny font, kąt, oświetlenie) myli się
+          częściej, zwłaszcza przy ograniczeniu 30.
+    \item \textbf{Brak klasy ,,tło''} -- SVM zawsze przypisuje jedną z 5 klas, więc
+          czerwone lub żółte fragmenty tła (cegła, dachówki) bywają błędnie
+          oznaczane jako znaki.
+    \item \textbf{Wrażliwość maski koloru} -- wyblakłe lub zacienione znaki bywają
+          pomijane, bo nie mieszczą się w progach maski.
+\end{itemize}
+
+\textbf{Możliwe ulepszenia.} W przyszłości warto: dodać klasę ,,tło'' z przykładami
+negatywnymi, aby ograniczyć fałszywe detekcje; rozszerzyć zbiór uczący o znaki z
+różnych krajów lub zastosować augmentację danych; a także dodać tłumienie
+nakładających się detekcji i obsługę wielu znaków na jednym zdjęciu.
 
 % =========================================================
 \begin{thebibliography}{9}
 
-    \bibitem{dalal2005}
-        N. Dalal, B. Triggs:
-        \textit{Histograms of Oriented Gradients for Human Detection},
-        CVPR 2005, San Diego, CA, s.~886--893.
+     \bibitem{wykl}
+        J. Marnik:
+        \textit{Materiały wykładowe z przedmiotu "Wizja komputerowa"},
+        Politechnika Rzeszowska 2025/26.
 
-    \bibitem{cortes1995}
-        C. Cortes, V. Vapnik:
-        \textit{Support-Vector Networks},
-        Machine Learning, vol.~20, no.~3, 1995, s.~273--297.
+             \bibitem{proj}
+        J. Marnik:
+        \textit{Propozycja zadań projektowych z przedmiotu "Wizja komputerowa"},
+        Politechnika Rzeszowska 2025/26.
 
-    \bibitem{stallkamp2012}
-        J. Stallkamp, M. Schlipsing, J. Salmen, C. Igel:
-        \textit{Man vs. computer: Benchmarking machine learning algorithms
-        for traffic sign recognition},
-        Neural Networks, vol.~32, 2012, s.~323--332.
+             \bibitem{instr}
+        J. Marnik:
+        \textit{Opis teoretyczne do ćwiczeń z przedmiotu "Wizja komputerowa"},
+        Politechnika Rzeszowska 2025/26.
+
+    \bibitem{svm}
+        M. Pokrywka:
+        \textit{Analiza wpływu hiperparametrów maszyny wektorów nośnych przy pomocy zbioru Haberman},
+        Github/MATP0K 2024.
+
+    
 
     \bibitem{scikit}
         F. Pedregosa et al.:
         \textit{Scikit-learn: Machine Learning in Python},
-        JMLR, vol.~12, 2011, s.~2825--2830.
-
-    \bibitem{opencv}
-        G. Bradski:
-        \textit{The OpenCV Library},
-        Dr. Dobb's Journal of Software Tools, 2000.
+        JMLR 2011
 
 \end{thebibliography}
 
